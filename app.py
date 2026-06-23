@@ -38,11 +38,21 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
 
-    # Create database tables
+    # Create database tables and default user
     with app.app_context():
         db.create_all()
         print("Database tables created!")
-        print("Run init_db.py to create the default user.")
+
+        # Create default user if it doesn't exist
+        existing_user = User.query.filter_by(username='pinklightning').first()
+        if not existing_user:
+            default_user = User(username='pinklightning')
+            default_user.set_password('gottohave100')
+            db.session.add(default_user)
+            db.session.commit()
+            print("✓ Default user created: pinklightning / gottohave100")
+        else:
+            print("✓ Default user already exists")
 
     return app
 
