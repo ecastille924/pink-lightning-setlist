@@ -55,9 +55,13 @@ def create_app():
             print("✓ Default user already exists")
 
         # Load starter songs if database is empty
+        # Set SKIP_STARTER_DATA=true in Render environment variables to prevent reloading
         song_count = Song.query.count()
-        if song_count == 0:
+        skip_starter = os.environ.get('SKIP_STARTER_DATA', 'false').lower() == 'true'
+
+        if song_count == 0 and not skip_starter:
             print("\n🎵 Loading Pink Lightning starter songs...")
+            print("   (Set SKIP_STARTER_DATA=true to prevent this in future deploys)")
 
             # Starter songs data with keys
             starter_songs = [
@@ -153,6 +157,9 @@ def create_app():
 
             db.session.commit()
             print("✓ Starter songs loaded successfully!")
+            print("   TIP: After editing songs, set SKIP_STARTER_DATA=true in Render to preserve changes")
+        elif skip_starter and song_count == 0:
+            print("⚠ Database is empty but SKIP_STARTER_DATA is set - no songs loaded")
         else:
             print(f"✓ Database has {song_count} songs")
 
