@@ -58,16 +58,9 @@ def create_app():
         song_count = Song.query.count()
         if song_count == 0:
             print("\n🎵 Loading Pink Lightning starter songs...")
-            load_starter_data()
-            print("✓ Starter songs loaded successfully!")
-        else:
-            print(f"✓ Database has {song_count} songs")
 
-    return app
-
-def load_starter_data():
-    """Load the 72 starter songs with keys into the database."""
-    starter_songs = [
+            # Starter songs data with keys
+            starter_songs = [
         {"title": "The Warrior", "artist": "Scandal", "era": "80s", "genre": "Rock", "key": "Em"},
         {"title": "The Sign", "artist": "Ace of Base", "era": "90s", "genre": "Pop", "key": "F#m"},
         {"title": "One Way or Another", "artist": "Blondie", "era": "70s", "genre": "Rock", "key": "D"},
@@ -142,23 +135,28 @@ def load_starter_data():
         {"title": "Basket Case", "artist": "Green Day", "era": "90s", "genre": "Rock", "key": "Eb"},
     ]
 
-    for song_data in starter_songs:
-        song = Song(
-            title=song_data["title"],
-            artist=song_data["artist"],
-            genre=song_data["genre"],
-            era=song_data["era"],
-            key=song_data.get("key"),  # Some songs don't have keys yet
-            frequency_weight=50.0,
-            first_set_only=False,
-            second_set_only=False,
-            potential_starting_song=False,
-            potential_final_song=False,
-            lead_vocals=None
-        )
-        db.session.add(song)
+            for song_data in starter_songs:
+                song = Song(
+                    title=song_data["title"],
+                    artist=song_data["artist"],
+                    genre=song_data["genre"],
+                    era=song_data["era"],
+                    key=song_data.get("key"),  # Some songs don't have keys yet
+                    frequency_weight=50.0,
+                    first_set_only=False,
+                    second_set_only=False,
+                    potential_starting_song=False,
+                    potential_final_song=False,
+                    lead_vocals=None
+                )
+                db.session.add(song)
 
-    db.session.commit()
+            db.session.commit()
+            print("✓ Starter songs loaded successfully!")
+        else:
+            print(f"✓ Database has {song_count} songs")
+
+    return app
 
 # Create app instance for Gunicorn
 app = create_app()
