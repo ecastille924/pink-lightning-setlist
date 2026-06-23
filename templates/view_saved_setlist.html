@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ setlist.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="bi bi-music-note-list"></i> {{ setlist.name }}
+            </h1>
+            <p class="text-muted">
+                <i class="bi bi-calendar"></i> Saved on {{ setlist.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+            </p>
+            {% if setlist.notes %}
+            <div class="alert alert-info">
+                <strong>Notes:</strong> {{ setlist.notes }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mb-3 no-print">
+        <a href="{{ url_for('main.list_saved_setlists') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Saved Setlists
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary">
+            <i class="bi bi-printer"></i> Print
+        </button>
+        <button class="btn btn-danger" onclick="confirmDelete()">
+            <i class="bi bi-trash"></i> Delete
+        </button>
+    </div>
+
+    {% for set_num in range(sets|length) %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">Set {{ set_num + 1 }}</h3>
+                <small class="text-muted">{{ sets[set_num]|length }} songs</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Key</th>
+                                <th>Genre</th>
+                                <th>Lead Vocals</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for song in sets[set_num] %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><strong>{{ song.title }}</strong></td>
+                                <td>{{ song.artist }}</td>
+                                <td>{{ song.key or '-' }}</td>
+                                <td>{{ song.genre or '-' }}</td>
+                                <td>
+                                    {% if song.lead_vocals == 'Lauren' %}
+                                        <span class="badge badge-lauren">L</span>
+                                    {% elif song.lead_vocals == 'Erick' %}
+                                        <span class="badge badge-erick">E</span>
+                                    {% elif song.lead_vocals == 'Both' %}
+                                        <span class="badge badge-lauren">L</span><span class="badge badge-erick">E</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the setlist "<strong>{{ setlist.name }}</strong>"?</p>
+                <p class="text-danger mb-0"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('main.delete_saved_setlist', setlist_id=setlist.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .card {
+        border: 1px solid #000;
+        page-break-inside: avoid;
+    }
+
+    .card-header {
+        background-color: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+.badge-lauren {
+    background-color: var(--primary-pink) !important;
+    color: white;
+    font-weight: bold;
+    margin-right: 2px;
+}
+
+.badge-erick {
+    background-color: #17a2b8 !important;
+    color: white;
+    font-weight: bold;
+    margin-right: 2px;
+}
+</style>
+{% endblock %}

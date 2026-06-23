@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Setlists{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-bookmark-star"></i>
+        Saved Setlists
+    </h1>
+
+    <div class="mb-3">
+        <a href="{{ url_for('main.generate_setlist') }}" class="btn btn-primary">
+            <i class="bi bi-lightning"></i> Generate New Setlist
+        </a>
+    </div>
+
+    {% if setlists %}
+        <div class="row">
+            {% for setlist in setlists %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-music-note-list"></i> {{ setlist.name }}
+                        </h5>
+                        <p class="card-text text-muted small">
+                            <i class="bi bi-calendar"></i> {{ setlist.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                        </p>
+
+                        {% if setlist.notes %}
+                        <p class="card-text">
+                            <small>{{ setlist.notes[:100] }}{% if setlist.notes|length > 100 %}...{% endif %}</small>
+                        </p>
+                        {% endif %}
+
+                        <p class="card-text">
+                            <span class="badge bg-secondary">{{ setlist.songs|length }} songs</span>
+                            {% set num_sets = setlist.songs|map(attribute='set_number')|max %}
+                            <span class="badge bg-info">{{ num_sets }} set{% if num_sets > 1 %}s{% endif %}</span>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{{ url_for('main.view_saved_setlist', setlist_id=setlist.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete({{ setlist.id }}, '{{ setlist.name }}')">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>No saved setlists yet.</strong>
+            <p class="mb-0 mt-2">Generate a setlist and click "Save Setlist" to save it for future reference.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the setlist "<strong id="deleteSetlistName"></strong>"?</p>
+                <p class="text-danger mb-0"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(setlistId, setlistName) {
+    document.getElementById('deleteSetlistName').textContent = setlistName;
+    document.getElementById('deleteForm').action = `/setlists/${setlistId}/delete`;
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

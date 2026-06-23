@@ -19,6 +19,9 @@
         <button onclick="showAddSongModal()" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Song
         </button>
+        <button onclick="showSaveModal()" class="btn btn-success">
+            <i class="bi bi-save"></i> Save Setlist
+        </button>
     </div>
 
     {% for set_num in range(num_sets) %}
@@ -439,7 +442,78 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
         });
+                });
+            });
+        }
+    });
+
+    // Save setlist functionality
+    function showSaveModal() {
+        const modal = new bootstrap.Modal(document.getElementById('saveSetlistModal'));
+        modal.show();
     }
-});
-</script>
-{% endblock %}
+
+    function saveSetlist() {
+        const nameInput = document.getElementById('setlistName');
+        const notesInput = document.getElementById('setlistNotes');
+
+        if (!nameInput.value.trim()) {
+            alert('Please enter a name for the setlist');
+            return;
+        }
+
+        // Collect current setlist data
+        const setlistData = [];
+        const numSets = {{ num_sets }};
+
+        for (let i = 0; i < numSets; i++) {
+            const tbody = document.getElementById(`setlist-${i}`);
+            const rows = tbody.querySelectorAll('tr.song-row');
+            const songIds = Array.from(rows).map(row => parseInt(row.dataset.songId));
+            setlistData.push(songIds);
+        }
+
+        // Set the hidden input value
+        document.getElementById('setlistDataInput').value = JSON.stringify(setlistData);
+
+        // Submit the form
+        document.getElementById('saveSetlistForm').submit();
+    }
+    </script>
+
+    <!-- Save Setlist Modal -->
+    <div class="modal fade" id="saveSetlistModal" tabindex="-1" aria-labelledby="saveSetlistModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="saveSetlistModalLabel">
+                        <i class="bi bi-save"></i> Save Setlist
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="saveSetlistForm" action="{{ url_for('main.save_setlist') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="setlistName" class="form-label">Setlist Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="setlistName" name="setlist_name" 
+                                   placeholder="e.g., Friday Night Show - Jan 2024" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="setlistNotes" class="form-label">Notes (optional)</label>
+                            <textarea class="form-control" id="setlistNotes" name="notes" rows="3"
+                                      placeholder="Add any notes about this setlist..."></textarea>
+                        </div>
+                        <input type="hidden" id="setlistDataInput" name="setlist_data">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" onclick="saveSetlist()">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% endblock %}

@@ -62,3 +62,31 @@ class Song(db.Model):
             'potential_final_song': self.potential_final_song,
             'frequency_weight': self.frequency_weight
         }
+
+class SavedSetlist(db.Model):
+    """Saved setlist model for storing generated setlists"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+
+    # Relationship to songs through association table
+    songs = db.relationship('SetlistSong', back_populates='setlist', cascade='all, delete-orphan', order_by='SetlistSong.position')
+
+    def __repr__(self):
+        return f'<SavedSetlist {self.name}>'
+
+class SetlistSong(db.Model):
+    """Association table for saved setlists and songs with ordering"""
+    id = db.Column(db.Integer, primary_key=True)
+    setlist_id = db.Column(db.Integer, db.ForeignKey('saved_setlist.id'), nullable=False)
+    song_id = db.Column(db.Integer, db.ForeignKey('song.id'), nullable=False)
+    set_number = db.Column(db.Integer, nullable=False)  # 1, 2, or 3
+    position = db.Column(db.Integer, nullable=False)  # Order within the entire setlist
+
+    # Relationships
+    setlist = db.relationship('SavedSetlist', back_populates='songs')
+    song = db.relationship('Song')
+
+    def __repr__(self):
+        return f'<SetlistSong setlist={self.setlist_id} song={self.song_id} pos={self.position}>'

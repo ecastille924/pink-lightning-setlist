@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required
-from models import Song
+from models import Song, SavedSetlist, SetlistSong
 from extensions import db
 
 main_bp = Blueprint('main', __name__)
@@ -186,3 +186,102 @@ def api_get_song(song_id):
     """API endpoint to get a single song as JSON"""
     song = Song.query.get_or_404(song_id)
     return jsonify(song.to_dict())
+
+# Saved setlists routes
+@main_bp.route('/setlists/save', methods=['POST'])
+@login_required
+def save_setlist():
+    """Save a generated setlist"""
+    try:
+        import json
+
+        # Get form data
+        setlist_name = request.form.get('setlist_name', '').strip()
+        notes = request.form.get('notes', '').strip()
+        setlist_data = request.form.get('setlist_data')
+
+        if not setlist_name:
+            flash('Please provide a name for the setlist', 'warning')
+            return redirect(request.referrer or url_for('main.generate_setlist'))
+
+        if not setlist_data:
+            flash('No setlist data provided', 'danger')
+            return redirect(request.referrer or url_for('main.generate_setlist'))
+
+        # Parse the setlist JSON data
+        setlist = json.loads(setlist_data)
+
+        # Create saved setlist
+        saved_setlist = SavedSetlist(
+            name=setlist_name,
+            notes=notes
+        )
+        db.session.add(saved_setlist)
+        db.session.flush()  # Get the ID without committing
+
+        # Add songs to setlist
+        position = 0
+        for set_num, songs in enumerate(setlist, start=1):
+            for song_id in songs:
+                setlist_song = SetlistSong(
+                    setlist_id=saved_setlist.id,
+                    song_id=song_id,
+                    set_number=set_num,
+                    position=position
+                )
+                db.session.add(setlist_song)
+                position += 1
+
+        db.session.commit()
+        flash(f'Setlist "{setlist_name}" saved successfully!', 'success')
+        return redirect(url_for('main.view_saved_setlist', setlist_id=saved_setlist.id))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error saving setlist: {str(e)}', 'danger')
+        return redirect(request.referrer or url_for('main.generate_setlist'))
+
+@main_bp.route('/setlists')
+@login_required
+def list_saved_setlists():
+    """List all saved setlists"""
+    setlists = SavedSetlist.query.order_by(SavedSetlist.created_at.desc()).all()
+    return render_template('saved_setlists.html', setlists=setlists)
+
+@main_bp.route('/setlists/<int:setlist_id>')
+@login_required
+def view_saved_setlist(setlist_id):
+    """View a specific saved setlist"""
+    setlist = SavedSetlist.query.get_or_404(setlist_id)
+
+    # Organize songs by set number
+    sets = {}
+    for setlist_song in setlist.songs:
+        set_num = setlist_song.set_number
+        if set_num not in sets:
+            sets[set_num] = []
+        sets[set_num].append(setlist_song.song)
+
+    # Convert to ordered list
+    organized_setlist = [sets.get(i, []) for i in range(1, max(sets.keys()) + 1)]
+
+    return render_template('view_saved_setlist.html', setlist=setlist, sets=organized_setlist)
+
+@main_bp.route('/setlists/<int:setlist_id>/delete', methods=['POST'])
+@login_required
+def delete_saved_setlist(setlist_id):
+    """Delete a saved setlist"""
+    try:
+        setlist = SavedSetlist.query.get_or_404(setlist_id)
+        setlist_name = setlist.name
+
+        db.session.delete(setlist)
+        db.session.commit()
+
+        flash(f'Setlist "{setlist_name}" deleted successfully', 'success')
+        return redirect(url_for('main.list_saved_setlists'))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting setlist: {str(e)}', 'danger')
+        return redirect(url_for('main.list_saved_setlists'))
