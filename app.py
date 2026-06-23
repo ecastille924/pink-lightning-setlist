@@ -151,7 +151,7 @@ def create_app():
                     second_set_only=False,
                     potential_starting_song=False,
                     potential_final_song=False,
-                    lead_vocals=None
+                    lead_vocals='Lauren'  # Default to Lauren
                 )
                 db.session.add(song)
 

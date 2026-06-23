@@ -105,6 +105,8 @@
                                 <span class="badge badge-lauren">L</span>
                             {% elif song.lead_vocals == 'Erick' %}
                                 <span class="badge badge-erick">E</span>
+                            {% elif song.lead_vocals == 'Both' %}
+                                <span class="badge badge-lauren">L</span><span class="badge badge-erick">E</span>
                             {% else %}
                                 -
                             {% endif %}
@@ -254,12 +256,14 @@ thead th {
     background-color: var(--primary-pink) !important;
     color: white;
     font-weight: bold;
+    margin-right: 2px;
 }
 
 .badge-erick {
     background-color: #17a2b8 !important; /* Teal */
     color: white;
     font-weight: bold;
+    margin-right: 2px;
 }
 
 .badge-start {

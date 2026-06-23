@@ -30,7 +30,7 @@ def add_song():
                 key=request.form.get('key'),
                 genre=request.form.get('genre'),
                 era=request.form.get('era'),
-                lead_vocals=request.form.get('lead_vocals'),
+                lead_vocals=request.form.get('lead_vocals') or 'Lauren',  # Default to Lauren
                 first_set_only=bool(request.form.get('first_set_only')),
                 second_set_only=bool(request.form.get('second_set_only')),
                 potential_starting_song=bool(request.form.get('potential_starting_song')),
@@ -71,7 +71,7 @@ def add_multiple_songs():
                     key=request.form.get(f'key_{i}', ''),
                     genre=request.form.get(f'genre_{i}', ''),
                     era=request.form.get(f'era_{i}', ''),
-                    lead_vocals=request.form.get(f'lead_vocals_{i}', ''),
+                    lead_vocals=request.form.get(f'lead_vocals_{i}', '') or 'Lauren',  # Default to Lauren
                     first_set_only=bool(request.form.get(f'first_set_only_{i}')),
                     second_set_only=bool(request.form.get(f'second_set_only_{i}')),
                     potential_starting_song=bool(request.form.get(f'potential_starting_song_{i}')),
@@ -103,7 +103,7 @@ def edit_song(song_id):
             song.key = request.form.get('key')
             song.genre = request.form.get('genre')
             song.era = request.form.get('era')
-            song.lead_vocals = request.form.get('lead_vocals')
+            song.lead_vocals = request.form.get('lead_vocals') or 'Lauren'  # Default to Lauren
             song.first_set_only = bool(request.form.get('first_set_only'))
             song.second_set_only = bool(request.form.get('second_set_only'))
             song.potential_starting_song = bool(request.form.get('potential_starting_song'))

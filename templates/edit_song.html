@@ -64,6 +64,7 @@
                                 <option value="" {% if not song.lead_vocals %}selected{% endif %}>Select vocalist...</option>
                                 <option value="Lauren" {% if song.lead_vocals == 'Lauren' %}selected{% endif %}>Lauren</option>
                                 <option value="Erick" {% if song.lead_vocals == 'Erick' %}selected{% endif %}>Erick</option>
+                                <option value="Both" {% if song.lead_vocals == 'Both' %}selected{% endif %}>Both (Duet)</option>
                             </select>
                         </div>
                     </div>
