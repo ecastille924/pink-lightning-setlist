@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Add Multiple Songs{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-plus-circle"></i>
+        Add Multiple Songs
+    </h1>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted mb-4">Add up to 5 songs at once using the form below. Click "Add Another Song" to add more rows.</p>
+
+            <form method="POST" id="multiSongForm">
+                <div id="songRows">
+                    <!-- Song rows will be added here -->
+                </div>
+
+                <div class="mb-4">
+                    <button type="button" class="btn btn-outline-primary" onclick="addSongRow()">
+                        <i class="bi bi-plus-lg"></i> Add Another Song
+                    </button>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Add All Songs
+                    </button>
+                    <a href="{{ url_for('main.list_songs') }}" class="btn btn-secondary">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let songCount = 0;
+
+function addSongRow() {
+    songCount++;
+    const container = document.getElementById('songRows');
+
+    const songRow = document.createElement('div');
+    songRow.className = 'song-row mb-4 p-3 border rounded';
+    songRow.id = `song-${songCount}`;
+
+    songRow.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Song ${songCount}</h5>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSongRow(${songCount})">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="title_${songCount}" required>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Artist <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="artist_${songCount}" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Key</label>
+                    <input type="text" class="form-control" name="key_${songCount}" placeholder="e.g., Am, C">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Genre</label>
+                    <input type="text" class="form-control" name="genre_${songCount}" placeholder="e.g., Rock, Pop">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Era</label>
+                    <input type="text" class="form-control" name="era_${songCount}" placeholder="e.g., 80s, 90s">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Lead Vocals</label>
+                    <select class="form-select" name="lead_vocals_${songCount}">
+                        <option value="">Select vocalist...</option>
+                        <option value="Lauren">Lauren</option>
+                        <option value="Erick">Erick</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Frequency Weight %</label>
+                    <input type="number" class="form-control" name="frequency_weight_${songCount}" 
+                           min="0" max="100" step="1" value="50">
+                    <small class="form-text text-muted">Higher % = more likely to appear in setlists</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label fw-bold">Set Placement Options</label>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="first_set_only_${songCount}">
+                        <label class="form-check-label">First Set Only</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="second_set_only_${songCount}">
+                        <label class="form-check-label">Second Set Only</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="potential_starting_song_${songCount}">
+                        <label class="form-check-label">Starting Song</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="potential_final_song_${songCount}">
+                        <label class="form-check-label">Final Song</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.appendChild(songRow);
+}
+
+function removeSongRow(id) {
+    const row = document.getElementById(`song-${id}`);
+    if (row) {
+        row.remove();
+    }
+}
+
+// Add first song row on page load
+document.addEventListener('DOMContentLoaded', function() {
+    addSongRow();
+});
+
+// Add hidden input with song count before submit
+document.getElementById('multiSongForm').addEventListener('submit', function(e) {
+    const countInput = document.createElement('input');
+    countInput.type = 'hidden';
+    countInput.name = 'song_count';
+    countInput.value = songCount;
+    this.appendChild(countInput);
+});
+</script>
+
+<style>
+.song-row {
+    background-color: rgba(255, 105, 180, 0.05);
+    border-color: var(--border-gray) !important;
+}
+</style>
+{% endblock %}

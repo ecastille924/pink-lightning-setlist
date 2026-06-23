@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Setlist{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <img src="{{ url_for('static', filename='images/pink-lightning-logo.png') }}" alt="" class="pink-lightning-logo me-2" onerror="this.style.display='none'">
+        <span>Generate Setlist</span>
+    </h1>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted">Total songs in database: <strong>{{ total_songs }}</strong></p>
+
+            <form method="POST" action="{{ url_for('main.create_setlist') }}" id="generateForm">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Number of Sets</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="num_sets" id="one_set" value="1" onchange="updateSetInputs()">
+                        <label class="form-check-label" for="one_set">One Set</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="num_sets" id="two_sets" value="2" checked onchange="updateSetInputs()">
+                        <label class="form-check-label" for="two_sets">Two Sets (Default)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="num_sets" id="three_sets" value="3" onchange="updateSetInputs()">
+                        <label class="form-check-label" for="three_sets">Three Sets</label>
+                    </div>
+                </div>
+
+                <div id="setInputsContainer">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-magic"></i> Generate Setlist
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateSetInputs() {
+    const numSets = parseInt(document.querySelector('input[name="num_sets"]:checked').value);
+    const container = document.getElementById('setInputsContainer');
+
+    let html = '<div class="mb-3"><label class="form-label fw-bold">Songs per Set</label></div>';
+
+    for (let i = 1; i <= numSets; i++) {
+        html += `
+            <div class="mb-3">
+                <label for="songs_set_${i}" class="form-label">Set ${i}:</label>
+                <input type="number" class="form-control" id="songs_set_${i}" name="songs_set_${i}" 
+                       min="1" max="100" value="18" required>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', updateSetInputs);
+</script>
+{% endblock %}

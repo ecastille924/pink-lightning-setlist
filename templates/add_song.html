@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Add Song{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-music-note-beamed"></i>
+        Add Song
+    </h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required autocomplete="off">
+                            <datalist id="titleSuggestions"></datalist>
+                            <div id="duplicateWarning" class="alert alert-warning mt-2" style="display: none;">
+                                <i class="bi bi-exclamation-triangle"></i> 
+                                <strong>Warning:</strong> A song with this title already exists in the database.
+                                <div id="existingSongs" class="mt-2 small"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="artist" class="form-label">Artist <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="artist" name="artist" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="key" class="form-label">Key</label>
+                            <input type="text" class="form-control" id="key" name="key" placeholder="e.g., Am, C">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="genre" class="form-label">Genre</label>
+                            <input type="text" class="form-control" id="genre" name="genre" placeholder="e.g., Rock, Pop">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="era" class="form-label">Era</label>
+                            <input type="text" class="form-control" id="era" name="era" placeholder="e.g., 80s, 90s">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Lead Vocals</label>
+                            <select class="form-select" name="lead_vocals">
+                                <option value="">Select vocalist...</option>
+                                <option value="Lauren">Lauren</option>
+                                <option value="Erick">Erick</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="frequency_weight" class="form-label">Frequency Weight %</label>
+                            <input type="number" class="form-control" id="frequency_weight" name="frequency_weight" 
+                                   min="0" max="100" step="1" value="50">
+                            <small class="form-text text-muted">Higher % = more likely to appear in setlists</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Set Placement Options</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="first_set_only" name="first_set_only">
+                        <label class="form-check-label" for="first_set_only">First Set Only</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="second_set_only" name="second_set_only">
+                        <label class="form-check-label" for="second_set_only">Second Set Only</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="potential_starting_song" name="potential_starting_song">
+                        <label class="form-check-label" for="potential_starting_song">Potential Starting Song</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="potential_final_song" name="potential_final_song">
+                        <label class="form-check-label" for="potential_final_song">Potential Final Song</label>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Add Song
+                    </button>
+                    <a href="{{ url_for('main.list_songs') }}" class="btn btn-secondary">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let allSongs = [];
+
+// Load all songs on page load
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/songs')
+        .then(response => response.json())
+        .then(songs => {
+            allSongs = songs;
+            setupAutocomplete();
+        })
+        .catch(error => {
+            console.error('Error loading songs:', error);
+        });
+});
+
+function setupAutocomplete() {
+    const titleInput = document.getElementById('title');
+    const duplicateWarning = document.getElementById('duplicateWarning');
+    const existingSongsDiv = document.getElementById('existingSongs');
+
+    // Create autocomplete dropdown
+    const suggestionsContainer = document.createElement('div');
+    suggestionsContainer.className = 'autocomplete-suggestions';
+    suggestionsContainer.style.cssText = `
+        position: absolute;
+        background-color: var(--soft-black, #2d2d2d);
+        border: 1px solid var(--primary-pink, #ff69b4);
+        border-top: none;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        width: 100%;
+        border-radius: 0 0 8px 8px;
+    `;
+    titleInput.parentElement.style.position = 'relative';
+    titleInput.parentElement.appendChild(suggestionsContainer);
+
+    // Handle input
+    titleInput.addEventListener('input', function() {
+        const value = this.value.toLowerCase().trim();
+        suggestionsContainer.innerHTML = '';
+        suggestionsContainer.style.display = 'none';
+
+        if (value.length < 2) {
+            duplicateWarning.style.display = 'none';
+            return;
+        }
+
+        // Find matching songs
+        const matches = allSongs.filter(song => 
+            song.title.toLowerCase().includes(value)
+        );
+
+        // Check for exact title matches
+        const exactMatches = allSongs.filter(song => 
+            song.title.toLowerCase() === value
+        );
+
+        if (exactMatches.length > 0) {
+            // Show warning for exact matches
+            existingSongsDiv.innerHTML = exactMatches.map(song => 
+                `<div class="mb-1">
+                    <strong>${song.title}</strong> by ${song.artist}
+                    ${song.key ? `(${song.key})` : ''}
+                </div>`
+            ).join('');
+            duplicateWarning.style.display = 'block';
+        } else {
+            duplicateWarning.style.display = 'none';
+        }
+
+        // Show suggestions
+        if (matches.length > 0 && matches.length <= 10) {
+            matches.forEach(song => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-item';
+                div.style.cssText = `
+                    padding: 10px;
+                    cursor: pointer;
+                    border-bottom: 1px solid var(--border-gray, #4a4a4a);
+                    color: var(--text-gray, #e0e0e0);
+                `;
+                div.innerHTML = `
+                    <strong>${song.title}</strong> 
+                    <small class="text-muted">by ${song.artist}</small>
+                `;
+
+                div.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = 'var(--light-black, #3d3d3d)';
+                    this.style.color = 'var(--primary-pink, #ff69b4)';
+                });
+
+                div.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                    this.style.color = 'var(--text-gray, #e0e0e0)';
+                });
+
+                div.addEventListener('click', function() {
+                    titleInput.value = song.title;
+                    document.getElementById('artist').value = song.artist;
+                    if (song.key) document.getElementById('key').value = song.key;
+                    if (song.genre) document.getElementById('genre').value = song.genre;
+                    if (song.era) document.getElementById('era').value = song.era;
+                    suggestionsContainer.style.display = 'none';
+
+                    // Show duplicate warning since they selected an existing song
+                    existingSongsDiv.innerHTML = `
+                        <div class="mb-1">
+                            <strong>${song.title}</strong> by ${song.artist}
+                            ${song.key ? `(${song.key})` : ''}
+                        </div>
+                    `;
+                    duplicateWarning.style.display = 'block';
+                });
+
+                suggestionsContainer.appendChild(div);
+            });
+            suggestionsContainer.style.display = 'block';
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target !== titleInput) {
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

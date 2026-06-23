@@ -1,0 +1,390 @@
+/* Pink Lightning Set List Generator - Custom CSS */
+
+:root {
+    /* Pink and Black Color Palette - Eye-friendly */
+    --primary-pink: #ff69b4;
+    --light-pink: #ffb6d9;
+    --dark-pink: #ff1493;
+    --soft-pink: #ffc0cb;
+    --very-light-pink: #fff0f5;
+
+    --primary-black: #1a1a1a;
+    --soft-black: #2d2d2d;
+    --light-black: #3d3d3d;
+    --text-gray: #e0e0e0;
+    --border-gray: #4a4a4a;
+}
+
+/* Global Styles */
+body {
+    background: linear-gradient(135deg, var(--primary-black) 0%, var(--soft-black) 100%);
+    color: var(--text-gray);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(90deg, var(--soft-black) 0%, var(--light-black) 100%) !important;
+    border-bottom: 2px solid var(--primary-pink);
+    box-shadow: 0 4px 6px rgba(255, 105, 180, 0.1);
+}
+
+.navbar-brand {
+    color: var(--primary-pink) !important;
+    font-weight: bold;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand .brand-text {
+    display: inline-block;
+}
+
+.navbar-brand:hover {
+    color: var(--light-pink) !important;
+}
+
+.nav-link {
+    color: var(--text-gray) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--primary-pink) !important;
+}
+
+.dropdown-menu {
+    background-color: var(--soft-black);
+    border: 1px solid var(--primary-pink);
+}
+
+.dropdown-item {
+    color: var(--text-gray);
+}
+
+.dropdown-item:hover {
+    background-color: var(--light-black);
+    color: var(--primary-pink);
+}
+
+/* Cards */
+.card {
+    background-color: var(--soft-black);
+    border: 1px solid var(--border-gray);
+    color: var(--text-gray);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+    background: linear-gradient(90deg, var(--light-black) 0%, var(--soft-black) 100%);
+    border-bottom: 2px solid var(--primary-pink);
+    color: var(--primary-pink);
+    font-weight: bold;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--dark-pink) 100%);
+    border: none;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--dark-pink) 0%, var(--primary-pink) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-pink);
+    color: var(--primary-pink);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-pink);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--light-black);
+    border: 1px solid var(--border-gray);
+    color: var(--text-gray);
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-gray);
+    color: var(--primary-pink);
+}
+
+.btn-outline-secondary {
+    border-color: var(--border-gray);
+    color: var(--text-gray);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--light-black);
+    color: var(--primary-pink);
+}
+
+.btn-outline-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Forms */
+.form-control, .form-select {
+    background-color: var(--light-black);
+    border: 1px solid var(--border-gray);
+    color: var(--text-gray);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--light-black);
+    border-color: var(--primary-pink);
+    color: var(--text-gray);
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+.form-control::placeholder {
+    color: #888;
+}
+
+.form-label {
+    color: var(--text-gray);
+    font-weight: 500;
+}
+
+.form-check-input {
+    background-color: var(--light-black);
+    border-color: var(--border-gray);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-pink);
+    border-color: var(--primary-pink);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+.form-check-label {
+    color: var(--text-gray);
+}
+
+/* Tables */
+.table {
+    color: var(--text-gray);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--light-black);
+    color: var(--primary-pink);
+}
+
+.table thead th {
+    border-bottom: 2px solid var(--primary-pink);
+    color: var(--primary-pink);
+    font-weight: 600;
+}
+
+.table td, .table th {
+    border-color: var(--border-gray);
+}
+
+/* Song Library specific styling - lighter background for less contrast */
+#songsTable {
+    background-color: #3a3a3a;
+}
+
+#songsTable tbody tr {
+    background-color: #3a3a3a;
+}
+
+#songsTable tbody tr:hover {
+    background-color: #454545;
+    color: var(--primary-pink);
+}
+
+#songsTable thead {
+    background-color: #2d2d2d;
+}
+
+#songsTable thead th {
+    background-color: #2d2d2d;
+}
+
+.table-responsive {
+    background-color: #3a3a3a;
+    border-radius: 8px;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 8px;
+    border-width: 1px;
+}
+
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: #0dcaf0;
+    color: #0dcaf0;
+}
+
+.alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-color: #198754;
+    color: #75b798;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #e88890;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* Footer */
+.footer {
+    background-color: var(--primary-black);
+    border-top: 2px solid var(--primary-pink);
+    color: var(--text-gray);
+}
+
+/* Login Page Specific */
+.card.shadow {
+    box-shadow: 0 8px 24px rgba(255, 105, 180, 0.2) !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--light-pink);
+}
+
+/* Links */
+a {
+    color: var(--primary-pink);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--light-pink);
+}
+
+/* Text Muted Override */
+.text-muted {
+    color: #999 !important;
+}
+
+/* Scrollbar Styling (webkit browsers) */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--primary-black);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-pink);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--light-pink);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+}
+
+/* Animation for lightning icon */
+@keyframes pulse-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 5px rgba(255, 105, 180, 0.8));
+    }
+    50% {
+        filter: drop-shadow(0 0 20px rgba(255, 105, 180, 1)) 
+                drop-shadow(0 0 30px rgba(255, 182, 217, 0.8));
+    }
+}
+
+.pink-lightning-logo {
+    animation: pulse-glow 2s ease-in-out infinite;
+    height: 2.5rem;
+    width: auto;
+    vertical-align: middle;
+}
+
+.pink-lightning-logo-lg {
+    animation: pulse-glow 2s ease-in-out infinite;
+    height: 3rem;
+    width: auto;
+    vertical-align: middle;
+}
+
+.bi-lightning-charge-fill {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+
+    .card {
+        border: 1px solid #000;
+        background: white;
+    }
+
+    .table {
+        color: black;
+    }
+
+    .pink-lightning-logo,
+    .pink-lightning-logo-lg {
+        animation: none;
+        filter: none;
+    }
+}

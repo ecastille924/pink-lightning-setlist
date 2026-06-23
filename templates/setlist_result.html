@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block title %}Generated Setlist{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-list-stars"></i>
+        Your Generated Setlist
+    </h1>
+
+    <div class="mb-3 no-print">
+        <a href="{{ url_for('main.generate_setlist') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Generate Another
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary">
+            <i class="bi bi-printer"></i> Print
+        </button>
+        <button onclick="showAddSongModal()" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Song
+        </button>
+    </div>
+
+    {% for set_num in range(num_sets) %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">Set {{ set_num + 1 }}</h3>
+                    <small class="text-muted song-count-{{ set_num }}">{{ setlists[set_num]|length }} songs</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover setlist-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;" class="no-print"></th>
+                                <th style="width: 40px;">#</th>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Key</th>
+                                <th>Genre</th>
+                                <th>Lead Vocals</th>
+                                <th style="width: 80px;" class="no-print">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="setlist-{{ set_num }}" class="sortable-setlist" data-set="{{ set_num }}">
+                            {% for song in setlists[set_num] %}
+                            <tr class="song-row" data-song-id="{{ song.id }}" draggable="true">
+                                <td class="drag-handle no-print" style="cursor: move;">
+                                    <i class="bi bi-grip-vertical"></i>
+                                </td>
+                                <td class="song-number">{{ loop.index }}</td>
+                                <td>
+                                    <strong>{{ song.title }}</strong>
+                                    {% if loop.first and song.potential_starting_song %}
+                                        <span class="badge badge-start ms-1" title="Starting Song">Start</span>
+                                    {% endif %}
+                                    {% if loop.last and song.potential_final_song %}
+                                        <span class="badge badge-final ms-1" title="Final Song">Final</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ song.artist }}</td>
+                                <td>{{ song.key or '-' }}</td>
+                                <td>{{ song.genre or '-' }}</td>
+                                <td>
+                                    {% if song.lead_vocals == 'Lauren' %}
+                                        <span class="badge badge-lauren">Lauren</span>
+                                    {% elif song.lead_vocals == 'Erick' %}
+                                        <span class="badge badge-erick">Erick</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="no-print">
+                                    <button class="btn btn-sm btn-danger" onclick="removeSong(this)" title="Remove from setlist">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Add Song Modal -->
+<div class="modal fade" id="addSongModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Song to Setlist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Set:</label>
+                    <select class="form-select" id="targetSet">
+                        {% for set_num in range(num_sets) %}
+                        <option value="{{ set_num }}">Set {{ set_num + 1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="includeDuplicates" onchange="toggleDuplicateFilter()">
+                        <label class="form-check-label" for="includeDuplicates">
+                            Show songs already in setlist (allow duplicates)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="addSongSearch" placeholder="Search songs...">
+                </div>
+
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover">
+                        <thead class="sticky-top bg-dark">
+                            <tr>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Key</th>
+                                <th>Genre</th>
+                                <th>Lead</th>
+                                <th style="width: 80px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="availableSongs">
+                            <tr>
+                                <td colspan="6" class="text-center">Loading songs...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.song-row.dragging {
+    opacity: 0.5;
+    background-color: rgba(255, 105, 180, 0.2);
+}
+
+.song-row.drag-over {
+    border-top: 3px solid #FF69B4;
+}
+
+.drag-handle {
+    color: #FF69B4;
+}
+
+.drag-handle:hover {
+    color: #20c997;
+}
+
+@media print {
+    .no-print, .btn, nav { display: none !important; }
+    .card { break-inside: avoid; }
+    .drag-handle { display: none !important; }
+}
+</style>
+
+<script>
+let draggedElement = null;
+let draggedSet = null;
+let allSongsCache = []; // Cache all songs from API
+
+// Initialize drag and drop
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDragAndDrop();
+});
+
+function initializeDragAndDrop() {
+    const rows = document.querySelectorAll('.song-row');
+
+    rows.forEach(row => {
+        row.addEventListener('dragstart', handleDragStart);
+        row.addEventListener('dragend', handleDragEnd);
+        row.addEventListener('dragover', handleDragOver);
+        row.addEventListener('drop', handleDrop);
+        row.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+function handleDragStart(e) {
+    draggedElement = this;
+    draggedSet = this.closest('.sortable-setlist').dataset.set;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    document.querySelectorAll('.song-row').forEach(row => {
+        row.classList.remove('drag-over');
+    });
+    renumberSet(draggedSet);
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+
+    const targetSet = this.closest('.sortable-setlist').dataset.set;
+    if (targetSet === draggedSet) {
+        e.dataTransfer.dropEffect = 'move';
+        this.classList.add('drag-over');
+    }
+
+    return false;
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+
+    const targetSet = this.closest('.sortable-setlist').dataset.set;
+
+    if (draggedElement !== this && targetSet === draggedSet) {
+        const tbody = this.closest('tbody');
+        const allRows = Array.from(tbody.querySelectorAll('.song-row'));
+        const draggedIndex = allRows.indexOf(draggedElement);
+        const targetIndex = allRows.indexOf(this);
+
+        if (draggedIndex < targetIndex) {
+            this.parentNode.insertBefore(draggedElement, this.nextSibling);
+        } else {
+            this.parentNode.insertBefore(draggedElement, this);
+        }
+    }
+
+    this.classList.remove('drag-over');
+    return false;
+}
+
+function renumberSet(setNum) {
+    const tbody = document.getElementById(`setlist-${setNum}`);
+    const rows = tbody.querySelectorAll('.song-row');
+    rows.forEach((row, index) => {
+        row.querySelector('.song-number').textContent = index + 1;
+    });
+
+    // Update song count
+    const countElement = document.querySelector(`.song-count-${setNum}`);
+    if (countElement) {
+        countElement.textContent = `${rows.length} songs`;
+    }
+}
+
+function removeSong(button) {
+    if (confirm('Remove this song from the setlist?')) {
+        const row = button.closest('.song-row');
+        const tbody = row.closest('.sortable-setlist');
+        const setNum = tbody.dataset.set;
+
+        row.remove();
+        renumberSet(setNum);
+    }
+}
+
+function getUsedSongIds() {
+    // Get all song IDs currently in all setlists
+    const usedIds = new Set();
+    document.querySelectorAll('.song-row').forEach(row => {
+        const songId = parseInt(row.getAttribute('data-song-id'));
+        if (songId) {
+            usedIds.add(songId);
+        }
+    });
+    return usedIds;
+}
+
+function toggleDuplicateFilter() {
+    // Re-display songs with current filter setting
+    displayAvailableSongs(allSongsCache);
+}
+
+function showAddSongModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addSongModal'));
+    modal.show();
+
+    // Reset duplicate checkbox
+    document.getElementById('includeDuplicates').checked = false;
+
+    // Load songs
+    fetch('/api/songs')
+        .then(response => response.json())
+        .then(songs => {
+            allSongsCache = songs;
+            displayAvailableSongs(songs);
+        })
+        .catch(error => {
+            document.getElementById('availableSongs').innerHTML = 
+                '<tr><td colspan="6" class="text-center text-danger">Error loading songs</td></tr>';
+        });
+}
+
+function displayAvailableSongs(songs) {
+    const tbody = document.getElementById('availableSongs');
+    const includeDuplicates = document.getElementById('includeDuplicates').checked;
+    const usedSongIds = getUsedSongIds();
+
+    // Filter out duplicates unless checkbox is checked
+    let filteredSongs = songs;
+    if (!includeDuplicates) {
+        filteredSongs = songs.filter(song => !usedSongIds.has(song.id));
+    }
+
+    if (filteredSongs.length === 0) {
+        const message = !includeDuplicates && songs.length > 0 ? 
+            'All songs are already in the setlist. Check "Show songs already in setlist" to add duplicates.' :
+            'No songs available';
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${message}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filteredSongs.map(song => {
+        const isInSetlist = usedSongIds.has(song.id);
+        const rowClass = isInSetlist ? 'table-warning' : '';
+        const duplicateLabel = isInSetlist ? '<span class="badge bg-warning text-dark ms-1">In Setlist</span>' : '';
+
+        return `
+        <tr class="${rowClass}">
+            <td><strong>${song.title}</strong>${duplicateLabel}</td>
+            <td>${song.artist}</td>
+            <td>${song.key || '-'}</td>
+            <td>${song.genre || '-'}</td>
+            <td>
+                ${song.lead_vocals === 'Lauren' ? '<span class="badge badge-lauren">L</span>' : 
+                  song.lead_vocals === 'Erick' ? '<span class="badge badge-erick">E</span>' : '-'}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="addSongToSet(${song.id})">
+                    <i class="bi bi-plus"></i> Add
+                </button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+            <td>${song.key || '-'}</td>
+            <td>${song.genre || '-'}</td>
+            <td>
+                ${song.lead_vocals === 'Lauren' ? '<span class="badge badge-lauren">L</span>' : 
+                  song.lead_vocals === 'Erick' ? '<span class="badge badge-erick">E</span>' : '-'}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="addSongToSet(${song.id})">
+                    <i class="bi bi-plus"></i> Add
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function addSongToSet(songId) {
+    const targetSet = document.getElementById('targetSet').value;
+
+    // Fetch song details
+    fetch(`/api/songs/${songId}`)
+        .then(response => response.json())
+        .then(song => {
+            const tbody = document.getElementById(`setlist-${targetSet}`);
+            const newRow = createSongRow(song, tbody.children.length + 1);
+            tbody.appendChild(newRow);
+
+            // Re-initialize drag and drop for the new row
+            const row = tbody.lastElementChild;
+            row.addEventListener('dragstart', handleDragStart);
+            row.addEventListener('dragend', handleDragEnd);
+            row.addEventListener('dragover', handleDragOver);
+            row.addEventListener('drop', handleDrop);
+            row.addEventListener('dragleave', handleDragLeave);
+
+            renumberSet(targetSet);
+
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addSongModal')).hide();
+        })
+        .catch(error => {
+            alert('Error adding song');
+        });
+}
+
+function createSongRow(song, position) {
+    const row = document.createElement('tr');
+    row.className = 'song-row';
+    row.setAttribute('data-song-id', song.id);
+    row.setAttribute('draggable', 'true');
+
+    const leadVocalsBadge = song.lead_vocals === 'Lauren' ? 
+        '<span class="badge badge-lauren">Lauren</span>' :
+        song.lead_vocals === 'Erick' ? 
+        '<span class="badge badge-erick">Erick</span>' : '-';
+
+    row.innerHTML = `
+        <td class="drag-handle no-print" style="cursor: move;">
+            <i class="bi bi-grip-vertical"></i>
+        </td>
+        <td class="song-number">${position}</td>
+        <td><strong>${song.title}</strong></td>
+        <td>${song.artist}</td>
+        <td>${song.key || '-'}</td>
+        <td>${song.genre || '-'}</td>
+        <td>${leadVocalsBadge}</td>
+        <td class="no-print">
+            <button class="btn btn-sm btn-danger" onclick="removeSong(this)" title="Remove from setlist">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+
+    return row;
+}
+
+// Search functionality for add song modal
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('addSongSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#availableSongs tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

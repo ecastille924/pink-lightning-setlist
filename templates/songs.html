@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Songs{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>
+                <i class="bi bi-music-note-list"></i>
+                Song Library
+            </h1>
+            <p class="text-muted mb-0">Total songs: <strong>{{ songs|length }}</strong></p>
+        </div>
+        <div>
+            <a href="{{ url_for('main.add_song') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Add Song
+            </a>
+            <a href="{{ url_for('main.add_multiple_songs') }}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-circle"></i> Add Multiple
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="🔍 Search songs...">
+                </div>
+                <div class="col-md-2">
+                    <select id="eraFilter" class="form-select form-select-sm">
+                        <option value="">All Eras</option>
+                        <option value="70s">70s</option>
+                        <option value="80s">80s</option>
+                        <option value="90s">90s</option>
+                        <option value="2000s">2000s</option>
+                        <option value="2010s">2010s</option>
+                        <option value="2020s">2020s</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="genreFilter" class="form-select form-select-sm">
+                        <option value="">All Genres</option>
+                        <option value="Rock">Rock</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Pop Rock">Pop Rock</option>
+                        <option value="Folk Rock">Folk Rock</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                        <i class="bi bi-x-circle"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if songs %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm" id="songsTable">
+                <thead class="sticky-top">
+                    <tr>
+                        <th style="cursor: pointer;" onclick="sortTable(0)">
+                            Title <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortTable(1)">
+                            Artist <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortTable(2)">
+                            Key <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortTable(3)">
+                            Genre <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortTable(4)">
+                            Era <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortTable(5)">
+                            Lead Vocals <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortTable(6)">
+                            Frequency <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th>Tags</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for song in songs %}
+                    <tr class="song-row" 
+                        data-title="{{ song.title|lower }}" 
+                        data-artist="{{ song.artist|lower }}"
+                        data-era="{{ song.era or '' }}"
+                        data-genre="{{ song.genre or '' }}">
+                        <td><strong>{{ song.title }}</strong></td>
+                        <td>{{ song.artist }}</td>
+                        <td>{{ song.key or '-' }}</td>
+                        <td>{{ song.genre or '-' }}</td>
+                        <td>{{ song.era or '-' }}</td>
+                        <td>
+                            {% if song.lead_vocals == 'Lauren' %}
+                                <span class="badge badge-lauren">L</span>
+                            {% elif song.lead_vocals == 'Erick' %}
+                                <span class="badge badge-erick">E</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ song.frequency_weight }}%</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% if song.first_set_only %}
+                                    <span class="badge bg-info">1st Set</span>
+                                {% endif %}
+                                {% if song.second_set_only %}
+                                    <span class="badge bg-info">2nd Set</span>
+                                {% endif %}
+                                {% if song.potential_starting_song %}
+                                    <span class="badge badge-start">Start</span>
+                                {% endif %}
+                                {% if song.potential_final_song %}
+                                    <span class="badge badge-final">Final</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('main.edit_song', song_id=song.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('main.delete_song', song_id=song.id) }}" 
+                                      style="display: inline;" onsubmit="return confirm('Delete {{ song.title }}?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            No songs in the library yet. <a href="{{ url_for('main.add_song') }}" class="alert-link">Add your first song!</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Search and Filter functionality
+const searchInput = document.getElementById('searchInput');
+const eraFilter = document.getElementById('eraFilter');
+const genreFilter = document.getElementById('genreFilter');
+const songRows = document.querySelectorAll('.song-row');
+
+function filterSongs() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedEra = eraFilter.value.toLowerCase();
+    const selectedGenre = genreFilter.value.toLowerCase();
+
+    songRows.forEach(row => {
+        const title = row.dataset.title;
+        const artist = row.dataset.artist;
+        const era = row.dataset.era.toLowerCase();
+        const genre = row.dataset.genre.toLowerCase();
+
+        const matchesSearch = title.includes(searchTerm) || artist.includes(searchTerm);
+        const matchesEra = !selectedEra || era === selectedEra;
+        const matchesGenre = !selectedGenre || genre.includes(selectedGenre.toLowerCase());
+
+        if (matchesSearch && matchesEra && matchesGenre) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function clearFilters() {
+    searchInput.value = '';
+    eraFilter.value = '';
+    genreFilter.value = '';
+    filterSongs();
+}
+
+// Table sorting
+function sortTable(columnIndex) {
+    const table = document.getElementById('songsTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aValue = a.cells[columnIndex].textContent.trim();
+        const bValue = b.cells[columnIndex].textContent.trim();
+
+        // Check if numeric (for frequency column)
+        const aNum = parseFloat(aValue);
+        const bNum = parseFloat(bValue);
+
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return aNum - bNum;
+        }
+
+        return aValue.localeCompare(bValue);
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Event listeners
+searchInput.addEventListener('input', filterSongs);
+eraFilter.addEventListener('change', filterSongs);
+genreFilter.addEventListener('change', filterSongs);
+</script>
+
+<style>
+.table thead th {
+    background-color: var(--soft-black);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table tbody tr:hover {
+    background-color: var(--light-black);
+    color: var(--primary-pink);
+}
+
+.table-responsive {
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+thead th {
+    white-space: nowrap;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.gap-1 {
+    gap: 0.25rem;
+}
+
+.badge-lauren {
+    background-color: var(--primary-pink) !important;
+    color: white;
+    font-weight: bold;
+}
+
+.badge-erick {
+    background-color: #17a2b8 !important; /* Teal */
+    color: white;
+    font-weight: bold;
+}
+
+.badge-start {
+    background-color: #17a2b8 !important; /* Teal */
+    color: white;
+}
+
+.badge-final {
+    background-color: var(--primary-pink) !important;
+    color: white;
+}
+</style>
+{% endblock %}
