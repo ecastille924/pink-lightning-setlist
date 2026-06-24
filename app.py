@@ -91,7 +91,6 @@ def create_app():
         {"title": "Rock and Roll", "artist": "Joan Jett", "era": "80s", "genre": "Rock"},
         {"title": "Immigrant Song", "artist": "Led Zeppelin", "era": "70s", "genre": "Rock", "key": "F#m"},
         {"title": "Respect", "artist": "Aretha Franklin", "era": "60s", "genre": "Rock", "key": "C"},
-        {"title": "Cannonball", "artist": "The Breeders", "era": "90s", "genre": "Rock", "key": "E"},
         {"title": "I Kissed a Girl", "artist": "Katy Perry", "era": "2000s", "genre": "Pop", "key": "C#"},
         {"title": "I Want You to Want Me", "artist": "Letters to Cleo", "era": "90s", "genre": "Rock", "key": "A"},
         {"title": "I'm So Excited", "artist": "The Pointer Sisters", "era": "80s", "genre": "Pop", "key": "F"},
