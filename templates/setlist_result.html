@@ -442,44 +442,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
         });
-                });
-            });
-        }
-    });
+    }
+});
 
-    // Save setlist functionality
-    function showSaveModal() {
-        const modal = new bootstrap.Modal(document.getElementById('saveSetlistModal'));
-        modal.show();
+// Save setlist functionality
+function showSaveModal() {
+    const modal = new bootstrap.Modal(document.getElementById('saveSetlistModal'));
+    modal.show();
+}
+
+function saveSetlist() {
+    const nameInput = document.getElementById('setlistName');
+    const notesInput = document.getElementById('setlistNotes');
+
+    if (!nameInput.value.trim()) {
+        alert('Please enter a name for the setlist');
+        return;
     }
 
-    function saveSetlist() {
-        const nameInput = document.getElementById('setlistName');
-        const notesInput = document.getElementById('setlistNotes');
+    // Collect current setlist data
+    const setlistData = [];
+    const numSets = {{ num_sets }};
 
-        if (!nameInput.value.trim()) {
-            alert('Please enter a name for the setlist');
-            return;
-        }
-
-        // Collect current setlist data
-        const setlistData = [];
-        const numSets = {{ num_sets }};
-
-        for (let i = 0; i < numSets; i++) {
-            const tbody = document.getElementById(`setlist-${i}`);
-            const rows = tbody.querySelectorAll('tr.song-row');
-            const songIds = Array.from(rows).map(row => parseInt(row.dataset.songId));
-            setlistData.push(songIds);
-        }
-
-        // Set the hidden input value
-        document.getElementById('setlistDataInput').value = JSON.stringify(setlistData);
-
-        // Submit the form
-        document.getElementById('saveSetlistForm').submit();
+    for (let i = 0; i < numSets; i++) {
+        const tbody = document.getElementById(`setlist-${i}`);
+        const rows = tbody.querySelectorAll('tr.song-row');
+        const songIds = Array.from(rows).map(row => parseInt(row.dataset.songId));
+        setlistData.push(songIds);
     }
-    </script>
+
+    // Set the hidden input value
+    document.getElementById('setlistDataInput').value = JSON.stringify(setlistData);
+
+    // Submit the form
+    document.getElementById('saveSetlistForm').submit();
+}
+</script>
 
     <!-- Save Setlist Modal -->
     <div class="modal fade" id="saveSetlistModal" tabindex="-1" aria-labelledby="saveSetlistModalLabel" aria-hidden="true">
