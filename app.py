@@ -55,13 +55,13 @@ def create_app():
             print("✓ Default user already exists")
 
         # Load starter songs if database is empty
-        # Set SKIP_STARTER_DATA=true in Render environment variables to prevent reloading
+        # New behavior: Only add songs that don't already exist (by title + artist)
+        # This prevents overwriting manually edited songs
         song_count = Song.query.count()
         skip_starter = os.environ.get('SKIP_STARTER_DATA', 'false').lower() == 'true'
 
-        if song_count == 0 and not skip_starter:
-            print("\n🎵 Loading Pink Lightning starter songs...")
-            print("   (Set SKIP_STARTER_DATA=true to prevent this in future deploys)")
+        if not skip_starter:
+            print("\n🎵 Checking for missing starter songs...")
 
             # Starter songs data with keys
             starter_songs = [
@@ -139,7 +139,21 @@ def create_app():
         {"title": "Basket Case", "artist": "Green Day", "era": "90s", "genre": "Rock", "key": "Eb"},
     ]
 
+            added_count = 0
+            skipped_count = 0
+
             for song_data in starter_songs:
+                # Check if song already exists by title and artist
+                existing_song = Song.query.filter_by(
+                    title=song_data["title"],
+                    artist=song_data["artist"]
+                ).first()
+
+                if existing_song:
+                    skipped_count += 1
+                    continue  # Skip this song, it already exists
+
+                # Song doesn't exist, add it
                 song = Song(
                     title=song_data["title"],
                     artist=song_data["artist"],
@@ -154,13 +168,20 @@ def create_app():
                     lead_vocals='Lauren'  # Default to Lauren
                 )
                 db.session.add(song)
+                added_count += 1
 
-            db.session.commit()
-            print("✓ Starter songs loaded successfully!")
-            print("   TIP: After editing songs, set SKIP_STARTER_DATA=true in Render to preserve changes")
-        elif skip_starter and song_count == 0:
-            print("⚠ Database is empty but SKIP_STARTER_DATA is set - no songs loaded")
+            if added_count > 0:
+                db.session.commit()
+                print(f"✓ Added {added_count} new starter songs")
+
+            if skipped_count > 0:
+                print(f"✓ Skipped {skipped_count} songs that already exist (preserving your edits)")
+
+            if added_count == 0 and skipped_count == 0:
+                print("✓ No starter songs to add")
+
         else:
+            print(f"✓ SKIP_STARTER_DATA is set - starter song check skipped")
             print(f"✓ Database has {song_count} songs")
 
     return app
