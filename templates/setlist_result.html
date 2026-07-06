@@ -354,20 +354,6 @@ function displayAvailableSongs(songs) {
     `;
     }).join('');
 }
-            <td>${song.key || '-'}</td>
-            <td>${song.genre || '-'}</td>
-            <td>
-                ${song.lead_vocals === 'Lauren' ? '<span class="badge badge-lauren">L</span>' : 
-                  song.lead_vocals === 'Erick' ? '<span class="badge badge-erick">E</span>' : '-'}
-            </td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="addSongToSet(${song.id})">
-                    <i class="bi bi-plus"></i> Add
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
 
 function addSongToSet(songId) {
     const targetSet = document.getElementById('targetSet').value;
