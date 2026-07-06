@@ -446,12 +446,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Save setlist functionality
-function showSaveModal() {
+window.showSaveModal = function() {
     const modal = new bootstrap.Modal(document.getElementById('saveSetlistModal'));
     modal.show();
-}
+};
 
-function saveSetlist() {
+window.saveSetlist = function() {
     const nameInput = document.getElementById('setlistName');
     const notesInput = document.getElementById('setlistNotes');
 
@@ -476,7 +476,7 @@ function saveSetlist() {
 
     // Submit the form
     document.getElementById('saveSetlistForm').submit();
-}
+};
 </script>
 
     <!-- Save Setlist Modal -->
