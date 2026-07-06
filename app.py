@@ -14,7 +14,8 @@ def create_app():
         # Render.com provides postgres:// but SQLAlchemy needs postgresql://
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///pinklightning.db'
+    db_uri = database_url or 'sqlite:///pinklightning.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize extensions with app
@@ -24,7 +25,7 @@ def create_app():
     login_manager.login_message = 'Please log in to access this page.'
 
     # Import models before blueprints
-    from models import User, Song
+    from models import User, Song, SavedSetlist, SetlistSong
 
     # Register user_loader
     @login_manager.user_loader
@@ -40,6 +41,15 @@ def create_app():
 
     # Create database tables and default user
     with app.app_context():
+        if db_uri.startswith('sqlite'):
+            print("\n" + "!"*60)
+            print("⚠ WARNING: USING EPHEMERAL SQLITE DATABASE")
+            print("Data will be lost on every Render restart or deploy!")
+            print("Configure a PostgreSQL DATABASE_URL to save data permanently.")
+            print("!"*60 + "\n")
+        else:
+            print("\n✓ Using Persistent PostgreSQL Database")
+
         db.create_all()
         print("Database tables created!")
 
