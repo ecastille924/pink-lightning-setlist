@@ -54,16 +54,18 @@ def create_app():
         else:
             print("✓ Default user already exists")
 
-        # Load starter songs if database is empty
-        # New behavior: Only add songs that don't already exist (by title + artist)
-        # This prevents overwriting manually edited songs
+        # Starter data loading (emergency use only)
+        # By default, starter songs are NOT loaded - the app uses existing database songs
+        # To load starter data: Set environment variable LOAD_STARTER_DATA=true
+        # This keeps the starter data as a backup but prevents automatic loading
         song_count = Song.query.count()
-        skip_starter = os.environ.get('SKIP_STARTER_DATA', 'false').lower() == 'true'
+        load_starter = os.environ.get('LOAD_STARTER_DATA', 'false').lower() == 'true'
 
-        if not skip_starter:
-            print("\n🎵 Checking for missing starter songs...")
+        if load_starter:
+            print("\n🎵 LOAD_STARTER_DATA flag detected - checking for missing starter songs...")
+            print("   (This should only be used for emergency database recovery)")
 
-            # Starter songs data with keys
+            # Starter songs data with keys (kept as backup reference)
             starter_songs = [
         {"title": "The Warrior", "artist": "Scandal", "era": "80s", "genre": "Rock", "key": "Em"},
         {"title": "The Sign", "artist": "Ace of Base", "era": "90s", "genre": "Pop", "key": "F#m"},
@@ -179,9 +181,14 @@ def create_app():
             if added_count == 0 and skipped_count == 0:
                 print("✓ No starter songs to add")
 
+            print("   REMINDER: Remove LOAD_STARTER_DATA flag after songs are loaded!")
+
         else:
-            print(f"✓ SKIP_STARTER_DATA is set - starter song check skipped")
+            # Normal operation - just report song count
             print(f"✓ Database has {song_count} songs")
+            if song_count == 0:
+                print("   ⚠ WARNING: No songs in database!")
+                print("   To load starter data, set LOAD_STARTER_DATA=true and redeploy")
 
     return app
 
