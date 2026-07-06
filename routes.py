@@ -267,6 +267,72 @@ def view_saved_setlist(setlist_id):
 
     return render_template('view_saved_setlist.html', setlist=setlist, sets=organized_setlist)
 
+@main_bp.route('/setlists/<int:setlist_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_saved_setlist(setlist_id):
+    """Edit a saved setlist"""
+    setlist = SavedSetlist.query.get_or_404(setlist_id)
+
+    if request.method == 'POST':
+        try:
+            import json
+
+            # Update basic info
+            setlist.name = request.form.get('setlist_name', setlist.name).strip()
+            setlist.notes = request.form.get('notes', '').strip()
+            setlist_data = request.form.get('setlist_data')
+
+            if not setlist.name:
+                flash('Please provide a name for the setlist', 'warning')
+                return redirect(url_for('main.edit_saved_setlist', setlist_id=setlist.id))
+
+            if setlist_data:
+                # Parse the setlist JSON data
+                updated_sets = json.loads(setlist_data)
+
+                # Clear existing setlist songs
+                SetlistSong.query.filter_by(setlist_id=setlist.id).delete()
+                db.session.flush()
+
+                # Re-add songs with new ordering
+                position = 0
+                for set_num, song_ids in enumerate(updated_sets, start=1):
+                    for song_id in song_ids:
+                        setlist_song = SetlistSong(
+                            setlist_id=setlist.id,
+                            song_id=song_id,
+                            set_number=set_num,
+                            position=position
+                        )
+                        db.session.add(setlist_song)
+                        position += 1
+
+            db.session.commit()
+            flash(f'Setlist "{setlist.name}" updated successfully!', 'success')
+            return redirect(url_for('main.view_saved_setlist', setlist_id=setlist.id))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating setlist: {str(e)}', 'danger')
+            return redirect(url_for('main.edit_saved_setlist', setlist_id=setlist.id))
+
+    # GET request - Organize songs by set number for the editor
+    sets = {}
+    for setlist_song in setlist.songs:
+        set_num = setlist_song.set_number
+        if set_num not in sets:
+            sets[set_num] = []
+        sets[set_num].append(setlist_song.song)
+
+    # Convert to ordered list
+    max_set = max(sets.keys()) if sets else 0
+    organized_setlist = [sets.get(i, []) for i in range(1, max_set + 1)]
+
+    return render_template('edit_saved_setlist.html', 
+                            setlist=setlist, 
+                            setlists=organized_setlist, 
+                            num_sets=len(organized_setlist))
+
 @main_bp.route('/setlists/<int:setlist_id>/delete', methods=['POST'])
 @login_required
 def delete_saved_setlist(setlist_id):

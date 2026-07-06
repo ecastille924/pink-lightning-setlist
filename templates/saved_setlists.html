@@ -44,6 +44,9 @@
                         <a href="{{ url_for('main.view_saved_setlist', setlist_id=setlist.id) }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-eye"></i> View
                         </a>
+                        <a href="{{ url_for('main.edit_saved_setlist', setlist_id=setlist.id) }}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
                         <button class="btn btn-sm btn-danger" onclick="confirmDelete({{ setlist.id }}, '{{ setlist.name }}')">
                             <i class="bi bi-trash"></i> Delete
                         </button>
